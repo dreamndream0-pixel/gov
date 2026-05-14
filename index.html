@@ -565,7 +565,7 @@ html, body {
 <div class="toast" id="toast"></div>
 
 <script>
-const API = 'https://pcc.g0v.ronny.tw/api/searchbytitle';
+const API = 'https://pcc-api.openfun.app/api/searchbytitle';
 const STORAGE_KEY = 'tender_explorer_v1';
 
 const $ = id => document.getElementById(id);
@@ -719,7 +719,7 @@ async function search() {
       type: isAward ? 'award' : 'tender',
       typeLabel: isAward ? '決標' : '招標',
       amount: amount,
-      url: `https://pcc.g0v.ronny.tw/tender?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      url: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
     };
   });
 
