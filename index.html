@@ -204,6 +204,46 @@ html, body {
 }
 .btn-reset:hover { background: var(--surface-soft); color: var(--text); }
 
+.date-quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.date-quick button {
+  padding: 6px 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.date-quick button:hover { background: var(--surface-soft); color: var(--text); border-color: var(--border-strong); }
+.date-quick button.active {
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
+  font-weight: 500;
+}
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 6px;
+  align-items: center;
+}
+.date-range .sb-input {
+  font-size: 12px;
+  padding: 7px 8px;
+  font-family: var(--mono);
+}
+.date-sep {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
 /* ============ Main Content ============ */
 .page-head {
   display: flex;
@@ -321,13 +361,30 @@ html, body {
 }
 
 .tender-card {
-  padding: 18px 20px;
   border-bottom: 1px solid var(--border);
-  cursor: pointer;
   transition: background 0.12s ease;
 }
 .tender-card:hover { background: var(--surface-soft); }
 .tender-card:last-child { border-bottom: none; }
+.tender-card-main {
+  padding: 18px 20px 12px;
+  cursor: pointer;
+}
+.tender-card-links {
+  padding: 0 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.tender-card-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.tender-card-links a:hover { text-decoration: underline; }
+.tender-card-links a.link-soft { color: var(--text-faint); font-weight: 400; }
+.tender-card-links .link-sep { color: var(--border-strong); }
 
 .tender-card-top {
   display: flex;
@@ -494,6 +551,22 @@ html, body {
     </div>
 
     <div class="sb-section">
+      <label class="sb-label">公告日期範圍</label>
+      <div class="date-quick">
+        <button type="button" data-days="7">7 天</button>
+        <button type="button" data-days="30">30 天</button>
+        <button type="button" data-days="90">90 天</button>
+        <button type="button" data-days="0">全部</button>
+      </div>
+      <div class="date-range">
+        <input type="date" class="sb-input" id="date-from">
+        <span class="date-sep">到</span>
+        <input type="date" class="sb-input" id="date-to">
+      </div>
+      <div class="sb-hint">留空代表不限。快速鈕會自動填入日期。</div>
+    </div>
+
+    <div class="sb-section">
       <label class="sb-label">公告類型</label>
       <div class="sb-radio-group" id="type-group">
         <label class="checked" data-val="all">全部</label>
@@ -590,6 +663,8 @@ function saveSettings() {
     unit: $('unit').value,
     type: currentType,
     pages: $('pages').value,
+    dateFrom: $('date-from').value,
+    dateTo: $('date-to').value,
   };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
 }
@@ -601,6 +676,8 @@ function loadSettings() {
     if (s.exclude !== undefined) $('exclude').value = s.exclude;
     if (s.unit !== undefined) $('unit').value = s.unit;
     if (s.pages) $('pages').value = s.pages;
+    if (s.dateFrom !== undefined) $('date-from').value = s.dateFrom;
+    if (s.dateTo !== undefined) $('date-to').value = s.dateTo;
     if (s.type) {
       currentType = s.type;
       document.querySelectorAll('#type-group label').forEach(l => {
@@ -665,6 +742,8 @@ async function search() {
   const exclude = parseList($('exclude').value);
   const unit = $('unit').value.trim();
   const pages = parseInt($('pages').value);
+  const dateFrom = $('date-from').value;  // YYYY-MM-DD or ''
+  const dateTo = $('date-to').value;
 
   $('btn-search').disabled = true;
   $('btn-search').textContent = '搜尋中…';
@@ -691,18 +770,25 @@ async function search() {
   }
 
   // Filter
+  // 把 YYYY-MM-DD 轉成 YYYYMMDD 給比對用
+  const fromRaw = dateFrom ? dateFrom.replace(/-/g, '') : '';
+  const toRaw = dateTo ? dateTo.replace(/-/g, '') : '';
+
   const filtered = all.filter(rec => {
     const brief = rec.brief || {};
     const title = brief.title || rec.title || '';
     const unitName = rec.unit_name || brief.unit_name || '';
     const recType = brief.type || '';
     const isAward = recType.indexOf('決標') !== -1;
+    const dateRaw = String(rec.date || '');
 
     if (currentType === 'tender' && isAward) return false;
     if (currentType === 'award' && !isAward) return false;
     for (const w of include) if (title.indexOf(w) === -1) return false;
     for (const w of exclude) if (title.indexOf(w) !== -1) return false;
     if (unit && unitName.indexOf(unit) === -1) return false;
+    if (fromRaw && dateRaw && dateRaw < fromRaw) return false;
+    if (toRaw && dateRaw && dateRaw > toRaw) return false;
     return true;
   });
 
@@ -719,7 +805,8 @@ async function search() {
       type: isAward ? 'award' : 'tender',
       typeLabel: isAward ? '決標' : '招標',
       amount: amount,
-      url: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      url: `https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?searchTarget=ATM&tenderName=${encodeURIComponent(brief.title || rec.title || '')}`,
+      altUrl: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
     };
   });
 
@@ -760,14 +847,21 @@ function renderResults() {
   }
 
   body.innerHTML = sorted.map(r => `
-    <div class="tender-card" onclick="window.open('${r.url}','_blank')">
-      <div class="tender-card-top">
-        <span class="tag tag-${r.type}">${r.typeLabel}</span>
-        <span class="tender-date">${fmtDate(r.date)}</span>
-        ${r.amount > 0 ? `<span class="tender-amount">${fmtMoney(r.amount)}</span>` : ''}
+    <div class="tender-card">
+      <div class="tender-card-main" onclick="window.open('${r.url}','_blank')">
+        <div class="tender-card-top">
+          <span class="tag tag-${r.type}">${r.typeLabel}</span>
+          <span class="tender-date">${fmtDate(r.date)}</span>
+          ${r.amount > 0 ? `<span class="tender-amount">${fmtMoney(r.amount)}</span>` : ''}
+        </div>
+        <div class="tender-title">${escapeHtml(r.title)}</div>
+        <div class="tender-unit">${escapeHtml(r.unit) || '(機關未填)'}</div>
       </div>
-      <div class="tender-title">${escapeHtml(r.title)}</div>
-      <div class="tender-unit">${escapeHtml(r.unit) || '(機關未填)'}</div>
+      <div class="tender-card-links">
+        <a href="${r.url}" target="_blank" rel="noopener">採購網原始公告 →</a>
+        <span class="link-sep">·</span>
+        <a href="${r.altUrl}" target="_blank" rel="noopener" class="link-soft">資料整理頁</a>
+      </div>
     </div>
   `).join('');
 }
@@ -816,6 +910,9 @@ function reset() {
   $('exclude').value = '維護, 保養';
   $('unit').value = '';
   $('pages').value = '3';
+  $('date-from').value = '';
+  $('date-to').value = '';
+  document.querySelectorAll('.date-quick button').forEach(b => b.classList.remove('active'));
   currentType = 'all';
   document.querySelectorAll('#type-group label').forEach(l => {
     l.classList.toggle('checked', l.dataset.val === 'all');
@@ -823,6 +920,34 @@ function reset() {
   saveSettings();
   toast('條件已重置');
 }
+
+// ----- Date quick buttons -----
+function setDateRange(days) {
+  if (days === 0) {
+    $('date-from').value = '';
+    $('date-to').value = '';
+  } else {
+    const today = new Date();
+    const from = new Date(today.getTime() - days * 86400000);
+    const fmt = d => d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+    $('date-from').value = fmt(from);
+    $('date-to').value = fmt(today);
+  }
+  document.querySelectorAll('.date-quick button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.days) === days);
+  });
+}
+document.querySelectorAll('.date-quick button').forEach(btn => {
+  btn.addEventListener('click', () => setDateRange(parseInt(btn.dataset.days)));
+});
+// 日期框手動改也要清掉快速鈕高亮
+['date-from', 'date-to'].forEach(id => {
+  $(id).addEventListener('change', () => {
+    document.querySelectorAll('.date-quick button').forEach(b => b.classList.remove('active'));
+  });
+});
 
 // ----- Wire up -----
 $('btn-search').addEventListener('click', search);
