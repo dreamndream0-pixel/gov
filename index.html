@@ -799,14 +799,17 @@ async function search() {
     const jobNo = rec.job_number || '';
     const unitId = rec.unit_id || '';
 
-    // 從 API 回傳的資料中找出採購網直連 URL
-    // 結構通常是 records[i].brief.url 或 records[i].url
-    // searchbytitle 回傳的是「最新一筆公告」的 brief
+    // 從 filename 推算採購網的 pkPmsMain
+    // filename 格式如 "ttd-71220703",取後段數字做 base64 編碼即得 pkPmsMain
+    // 例:71220703 → NzEyMjA3MDM(去掉結尾的 = )
     let pccUrl = '';
-    if (rec.url && rec.url.indexOf('pcc.gov.tw') !== -1) {
-      pccUrl = rec.url;
-    } else if (brief.url && brief.url.indexOf('pcc.gov.tw') !== -1) {
-      pccUrl = brief.url;
+    const filename = rec.filename || '';
+    const fnMatch = filename.match(/[-_](\d+)$/);
+    if (fnMatch) {
+      const pmsId = fnMatch[1];
+      // 純 ASCII 數字直接 btoa 即可
+      const pkPmsMain = btoa(pmsId).replace(/=+$/, ''); // 去掉結尾 =
+      pccUrl = `https://web.pcc.gov.tw/tps/QueryTender/query/searchTenderDetail?pkPmsMain=${pkPmsMain}`;
     }
 
     return {
@@ -816,7 +819,7 @@ async function search() {
       type: isAward ? 'award' : 'tender',
       typeLabel: isAward ? '決標' : '招標',
       amount: amount,
-      // 主連結:採購網直連(若 API 有給),否則退而求其次用 g0v viewer
+      // 主連結:採購網直連
       url: pccUrl || `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
       // 副連結:g0v 整理頁(資料較完整,看金額、廠商等)
       altUrl: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
