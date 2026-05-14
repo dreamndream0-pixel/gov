@@ -798,6 +798,17 @@ async function search() {
     const amount = getAmount(rec);
     const jobNo = rec.job_number || '';
     const unitId = rec.unit_id || '';
+
+    // 從 API 回傳的資料中找出採購網直連 URL
+    // 結構通常是 records[i].brief.url 或 records[i].url
+    // searchbytitle 回傳的是「最新一筆公告」的 brief
+    let pccUrl = '';
+    if (rec.url && rec.url.indexOf('pcc.gov.tw') !== -1) {
+      pccUrl = rec.url;
+    } else if (brief.url && brief.url.indexOf('pcc.gov.tw') !== -1) {
+      pccUrl = brief.url;
+    }
+
     return {
       title: brief.title || rec.title || '(無標題)',
       unit: rec.unit_name || brief.unit_name || '',
@@ -805,8 +816,11 @@ async function search() {
       type: isAward ? 'award' : 'tender',
       typeLabel: isAward ? '決標' : '招標',
       amount: amount,
-      url: `https://web.pcc.gov.tw/prkms/urlSelector/common/tpam?searchTarget=ATM&tenderName=${encodeURIComponent(brief.title || rec.title || '')}`,
+      // 主連結:採購網直連(若 API 有給),否則退而求其次用 g0v viewer
+      url: pccUrl || `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      // 副連結:g0v 整理頁(資料較完整,看金額、廠商等)
       altUrl: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      hasPccUrl: !!pccUrl,
     };
   });
 
@@ -858,9 +872,13 @@ function renderResults() {
         <div class="tender-unit">${escapeHtml(r.unit) || '(機關未填)'}</div>
       </div>
       <div class="tender-card-links">
-        <a href="${r.url}" target="_blank" rel="noopener">採購網原始公告 →</a>
-        <span class="link-sep">·</span>
-        <a href="${r.altUrl}" target="_blank" rel="noopener" class="link-soft">資料整理頁</a>
+        ${r.hasPccUrl 
+          ? `<a href="${r.url}" target="_blank" rel="noopener">採購網原始公告 →</a>
+             <span class="link-sep">·</span>
+             <a href="${r.altUrl}" target="_blank" rel="noopener" class="link-soft">查看資料整理</a>`
+          : `<a href="${r.altUrl}" target="_blank" rel="noopener">查看標案詳情 →</a>
+             <span class="link-soft" style="color:var(--text-faint);">(此筆無採購網直連)</span>`
+        }
       </div>
     </div>
   `).join('');
