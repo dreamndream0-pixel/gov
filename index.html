@@ -4,406 +4,979 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>標案探勘 · Tender Explorer</title>
-
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-body{
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  background:#f5f5f5;
-  margin:0;
-  color:#222;
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface-soft: #f4f3ee;
+  --border: #e8e6df;
+  --border-strong: #c9c5b8;
+  --text: #1c1c1a;
+  --text-soft: #5a5852;
+  --text-faint: #8e8b80;
+  --accent: #b91c1c;
+  --accent-soft: #fef2f2;
+  --tender: #1e40af;
+  --tender-soft: #eff6ff;
+  --award: #166534;
+  --award-soft: #f0fdf4;
+  --shadow-sm: 0 1px 2px rgba(28, 28, 26, 0.04);
+  --shadow: 0 1px 3px rgba(28, 28, 26, 0.06), 0 4px 16px rgba(28, 28, 26, 0.04);
+  --radius: 6px;
+  --radius-sm: 4px;
+  --serif: 'Noto Serif TC', 'Source Han Serif TC', 'PMingLiU', serif;
+  --sans: 'Noto Sans TC', -apple-system, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 }
-header{
-  background:#111;
-  color:#fff;
-  padding:20px 30px;
-  font-size:24px;
-  font-weight:700;
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
 }
-.layout{
-  display:grid;
-  grid-template-columns:320px 1fr;
-  min-height:100vh;
+
+/* ============ Top Bar ============ */
+.topbar {
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  padding: 18px 32px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.92);
 }
-.sidebar{
-  background:#fff;
-  padding:24px;
-  border-right:1px solid #ddd;
+.brand {
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
 }
-.main{
-  padding:30px;
+.brand .dot {
+  color: var(--accent);
+  font-family: var(--sans);
 }
-label{
-  display:block;
-  margin-bottom:8px;
-  font-size:12px;
-  color:#666;
-  text-transform:uppercase;
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-left: 4px;
 }
-input,select{
-  width:100%;
-  padding:12px;
-  border:1px solid #ccc;
-  border-radius:8px;
-  margin-bottom:20px;
-  box-sizing:border-box;
+.topbar-meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-faint);
+  font-family: var(--mono);
 }
-button{
-  width:100%;
-  padding:14px;
-  border:none;
-  border-radius:8px;
-  background:#111;
-  color:#fff;
-  cursor:pointer;
-  font-size:15px;
+
+/* ============ Layout ============ */
+.app {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: calc(100vh - 60px);
 }
-.stats{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:12px;
-  margin-bottom:24px;
+
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 24px;
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
 }
-.stat{
-  background:#fff;
-  padding:20px;
-  border-radius:12px;
+
+.main {
+  padding: 28px 32px 64px;
+  max-width: 1200px;
 }
-.stat-title{
-  color:#777;
-  font-size:12px;
+
+/* ============ Sidebar Form ============ */
+.sb-section {
+  margin-bottom: 28px;
 }
-.stat-value{
-  font-size:28px;
-  margin-top:8px;
+.sb-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
 }
-.results{
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
+.sb-hint {
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 6px;
+  line-height: 1.5;
 }
-.card{
-  padding:20px;
-  border-bottom:1px solid #eee;
+.sb-input, .sb-select {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text);
+  transition: all 0.15s ease;
 }
-.card:hover{
-  background:#fafafa;
+.sb-input:focus, .sb-select:focus {
+  outline: none;
+  border-color: var(--text);
+  background: var(--surface);
 }
-.title{
-  font-size:20px;
-  font-weight:600;
-  margin:12px 0;
+.sb-input::placeholder { color: var(--text-faint); }
+
+.sb-radio-group {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg);
 }
-.links{
-  margin-top:16px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
+.sb-radio-group label {
+  flex: 1;
+  text-align: center;
+  padding: 8px 6px;
+  font-size: 13px;
+  cursor: pointer;
+  border-right: 1px solid var(--border);
+  transition: all 0.15s ease;
+  color: var(--text-soft);
 }
-.link{
-  display:inline-block;
-  padding:10px 14px;
-  border-radius:8px;
-  background:#f3f3f3;
-  color:#111;
-  text-decoration:none;
+.sb-radio-group label:last-child { border-right: none; }
+.sb-radio-group input { display: none; }
+.sb-radio-group input:checked + label,
+.sb-radio-group label.checked {
+  background: var(--text);
+  color: var(--surface);
+  font-weight: 500;
 }
-.empty{
-  padding:80px;
-  text-align:center;
-  color:#777;
+
+.btn-search {
+  width: 100%;
+  padding: 12px;
+  background: var(--text);
+  color: var(--surface);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 8px;
 }
-@media(max-width:900px){
-  .layout{
-    grid-template-columns:1fr;
-  }
+.btn-search:hover { background: #000; transform: translateY(-1px); }
+.btn-search:active { transform: translateY(0); }
+.btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-reset {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  color: var(--text-soft);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: all 0.15s ease;
+}
+.btn-reset:hover { background: var(--surface-soft); color: var(--text); }
+
+.date-quick {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.date-quick button {
+  padding: 6px 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-soft);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.date-quick button:hover { background: var(--surface-soft); color: var(--text); border-color: var(--border-strong); }
+.date-quick button.active {
+  background: var(--text);
+  color: var(--surface);
+  border-color: var(--text);
+  font-weight: 500;
+}
+.date-range {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 6px;
+  align-items: center;
+}
+.date-range .sb-input {
+  font-size: 12px;
+  padding: 7px 8px;
+  font-family: var(--mono);
+}
+.date-sep {
+  font-size: 11px;
+  color: var(--text-faint);
+}
+
+/* ============ Main Content ============ */
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.page-title .accent { color: var(--accent); }
+.page-sub {
+  font-size: 13px;
+  color: var(--text-soft);
+  margin-top: 4px;
+}
+.page-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-ghost {
+  padding: 8px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover { background: var(--surface-soft); border-color: var(--border-strong); }
+.btn-ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ============ Stats Cards ============ */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.stat-value .unit {
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text-faint);
+  margin-left: 4px;
+  font-weight: 400;
+}
+.stat.accent { background: var(--accent-soft); border-color: #fecaca; }
+.stat.accent .stat-value { color: var(--accent); }
+
+/* ============ Results ============ */
+.results {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-soft);
+}
+.result-head-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+.result-sort {
+  font-size: 12px;
+  color: var(--text-soft);
+}
+.result-sort select {
+  border: none;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.tender-card {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s ease;
+}
+.tender-card:hover { background: var(--surface-soft); }
+.tender-card:last-child { border-bottom: none; }
+.tender-card-main {
+  padding: 18px 20px 12px;
+  cursor: pointer;
+}
+.tender-card-links {
+  padding: 0 20px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.tender-card-links a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+.tender-card-links a:hover { text-decoration: underline; }
+.tender-card-links a.link-soft { color: var(--text-faint); font-weight: 400; }
+.tender-card-links .link-sep { color: var(--border-strong); }
+
+.tender-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  border-radius: 3px;
+}
+.tag-tender { background: var(--tender-soft); color: var(--tender); }
+.tag-award { background: var(--award-soft); color: var(--award); }
+
+.tender-date {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.tender-amount {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.tender-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+.tender-title:hover { color: var(--accent); }
+
+.tender-unit {
+  font-size: 13px;
+  color: var(--text-soft);
+}
+.tender-unit::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  background: var(--text-faint);
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* ============ Empty / Loading ============ */
+.state {
+  padding: 80px 20px;
+  text-align: center;
+}
+.state-icon {
+  font-family: var(--serif);
+  font-size: 56px;
+  font-weight: 600;
+  color: var(--border-strong);
+  margin-bottom: 16px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.state-title {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.state-desc {
+  font-size: 13px;
+  color: var(--text-soft);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============ Toast ============ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--surface);
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 100;
+}
+.toast.show { opacity: 1; }
+
+/* ============ Responsive ============ */
+@media (max-width: 980px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .main { padding: 20px; }
+  .topbar { padding: 16px 20px; }
+}
+@media (max-width: 560px) {
+  .page-title { font-size: 22px; }
+  .stats { grid-template-columns: 1fr 1fr; }
+  .tender-amount { margin-left: 0; width: 100%; margin-top: 4px; }
+  .tender-card-top { flex-wrap: wrap; }
 }
 </style>
 </head>
 <body>
 
-<header>政府標案探勘</header>
+<header class="topbar">
+  <div class="brand">標案探勘<span class="dot">.</span><span class="brand-sub">Tender Explorer</span></div>
+  <div class="topbar-meta" id="topbar-meta">Ready</div>
+</header>
 
-<div class="layout">
+<div class="app">
 
-<div class="sidebar">
+  <aside class="sidebar">
 
-<label>主要關鍵字</label>
-<input id="query" value="資訊">
+    <div class="sb-section">
+      <label class="sb-label">主要關鍵字</label>
+      <input type="text" class="sb-input" id="query" placeholder="例:資訊、採購、工程" value="資訊">
+      <div class="sb-hint">向資料源查詢時用,建議寬鬆一點。</div>
+    </div>
 
-<label>必須包含</label>
-<input id="include" placeholder="資訊,系統">
+    <div class="sb-section">
+      <label class="sb-label">必須包含的字 <span style="text-transform:none;letter-spacing:0;color:var(--text-faint);">(且)</span></label>
+      <input type="text" class="sb-input" id="include" placeholder="多個用逗號分隔">
+      <div class="sb-hint">標題必須「全部」包含,例:資訊, 系統</div>
+    </div>
 
-<label>排除關鍵字</label>
-<input id="exclude" value="維護,保養">
+    <div class="sb-section">
+      <label class="sb-label">排除的字 <span style="text-transform:none;letter-spacing:0;color:var(--text-faint);">(不要)</span></label>
+      <input type="text" class="sb-input" id="exclude" placeholder="多個用逗號分隔" value="維護, 保養">
+      <div class="sb-hint">標題出現任一個就排除。</div>
+    </div>
 
-<label>機關名稱</label>
-<input id="unit" placeholder="臺北市">
+    <div class="sb-section">
+      <label class="sb-label">機關名稱</label>
+      <input type="text" class="sb-input" id="unit" placeholder="例:臺中">
+      <div class="sb-hint">政府用「臺」不是「台」。</div>
+    </div>
 
-<label>公告類型</label>
-<select id="type">
-<option value="all">全部</option>
-<option value="tender">招標</option>
-<option value="award">決標</option>
-</select>
+    <div class="sb-section">
+      <label class="sb-label">公告日期範圍</label>
+      <div class="date-quick">
+        <button type="button" data-days="7">7 天</button>
+        <button type="button" data-days="30">30 天</button>
+        <button type="button" data-days="90">90 天</button>
+        <button type="button" data-days="0">全部</button>
+      </div>
+      <div class="date-range">
+        <input type="date" class="sb-input" id="date-from">
+        <span class="date-sep">到</span>
+        <input type="date" class="sb-input" id="date-to">
+      </div>
+      <div class="sb-hint">留空代表不限。快速鈕會自動填入日期。</div>
+    </div>
 
-<label>招標類別</label>
-<select id="category">
-<option value="">全部</option>
-<option value="公開招標">公開招標</option>
-<option value="限制性招標">限制性招標</option>
-<option value="公開取得報價">公開取得報價</option>
-<option value="公開評選">公開評選</option>
-<option value="最有利標">最有利標</option>
-</select>
+    <div class="sb-section">
+      <label class="sb-label">公告類型</label>
+      <div class="sb-radio-group" id="type-group">
+        <label class="checked" data-val="all">全部</label>
+        <label data-val="tender">招標</label>
+        <label data-val="award">決標</label>
+      </div>
+    </div>
 
-<label>抓取頁數</label>
-<select id="pages">
-<option value="1">1頁</option>
-<option value="3" selected>3頁</option>
-<option value="5">5頁</option>
-<option value="10">10頁</option>
-</select>
+    <div class="sb-section">
+      <label class="sb-label">抓取頁數</label>
+      <select class="sb-select" id="pages">
+        <option value="1">1 頁(約 100 筆)</option>
+        <option value="2">2 頁</option>
+        <option value="3" selected>3 頁(推薦)</option>
+        <option value="5">5 頁</option>
+        <option value="10">10 頁(較慢)</option>
+      </select>
+    </div>
 
-<button id="searchBtn">開始搜尋</button>
+    <button class="btn-search" id="btn-search">開始搜尋</button>
+    <button class="btn-reset" id="btn-reset">重置條件</button>
 
+  </aside>
+
+  <main class="main">
+
+    <div class="page-head">
+      <div>
+        <h1 class="page-title">政府標案<span class="accent">探勘</span></h1>
+        <div class="page-sub">從 g0v 開放標案資料庫即時查詢,所有條件可組合篩選。</div>
+      </div>
+      <div class="page-actions">
+        <button class="btn-ghost" id="btn-export" disabled>匯出 CSV</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-label">符合條件</div><div class="stat-value" id="s-total">—</div></div>
+      <div class="stat"><div class="stat-label">招標公告</div><div class="stat-value" id="s-tender">—</div></div>
+      <div class="stat"><div class="stat-label">決標公告</div><div class="stat-value" id="s-award">—</div></div>
+      <div class="stat accent"><div class="stat-label">總金額</div><div class="stat-value" id="s-amount">—</div></div>
+    </div>
+
+    <div class="results">
+      <div class="result-head">
+        <div class="result-head-title" id="result-head-title">結果列表</div>
+        <div class="result-sort">
+          排序:
+          <select id="sort">
+            <option value="date-desc">日期新→舊</option>
+            <option value="date-asc">日期舊→新</option>
+            <option value="amount-desc">金額高→低</option>
+            <option value="amount-asc">金額低→高</option>
+          </select>
+        </div>
+      </div>
+      <div id="result-body">
+        <div class="state">
+          <div class="state-icon">標</div>
+          <div class="state-title">準備好開始了</div>
+          <div class="state-desc">在左側填好你想找的條件,按「開始搜尋」。資料來自 g0v 開放標案 API,大約涵蓋近兩年公告。</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<div class="main">
-
-<div class="stats">
-  <div class="stat">
-    <div class="stat-title">符合條件</div>
-    <div class="stat-value" id="s-total">0</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-title">招標公告</div>
-    <div class="stat-value" id="s-tender">0</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-title">決標公告</div>
-    <div class="stat-value" id="s-award">0</div>
-  </div>
-
-  <div class="stat">
-    <div class="stat-title">總金額</div>
-    <div class="stat-value" id="s-amount">0</div>
-  </div>
-</div>
-
-<div class="results">
-  <div id="result-body">
-    <div class="empty">請開始搜尋</div>
-  </div>
-</div>
-
-</div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script>
 const API = 'https://pcc-api.openfun.app/api/searchbytitle';
+const STORAGE_KEY = 'tender_explorer_v1';
 
 const $ = id => document.getElementById(id);
+let currentResults = [];
+let currentType = 'all';
 
-function parseList(str){
-  return str.split(',').map(v=>v.trim()).filter(Boolean);
+// ----- Type radio group -----
+document.querySelectorAll('#type-group label').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('#type-group label').forEach(l => l.classList.remove('checked'));
+    el.classList.add('checked');
+    currentType = el.dataset.val;
+  });
+});
+
+// ----- Save/load settings -----
+function saveSettings() {
+  const s = {
+    query: $('query').value,
+    include: $('include').value,
+    exclude: $('exclude').value,
+    unit: $('unit').value,
+    type: currentType,
+    pages: $('pages').value,
+    dateFrom: $('date-from').value,
+    dateTo: $('date-to').value,
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch (e) {}
+}
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    if (s.query !== undefined) $('query').value = s.query;
+    if (s.include !== undefined) $('include').value = s.include;
+    if (s.exclude !== undefined) $('exclude').value = s.exclude;
+    if (s.unit !== undefined) $('unit').value = s.unit;
+    if (s.pages) $('pages').value = s.pages;
+    if (s.dateFrom !== undefined) $('date-from').value = s.dateFrom;
+    if (s.dateTo !== undefined) $('date-to').value = s.dateTo;
+    if (s.type) {
+      currentType = s.type;
+      document.querySelectorAll('#type-group label').forEach(l => {
+        l.classList.toggle('checked', l.dataset.val === s.type);
+      });
+    }
+  } catch (e) {}
 }
 
-function fmtDate(raw){
+// ----- Utils -----
+function parseList(s) {
+  return s.split(/[,,]/).map(x => x.trim()).filter(Boolean);
+}
+function fmtDate(raw) {
   raw = String(raw || '');
-  if(raw.length===8){
-    return raw.slice(0,4)+'.'+raw.slice(4,6)+'.'+raw.slice(6,8);
-  }
+  if (raw.length === 8) return raw.substr(0,4) + '.' + raw.substr(4,2) + '.' + raw.substr(6,2);
   return raw;
 }
-
-function money(n){
-  n = Number(n||0);
-  if(n>=100000000) return 'NT$ '+(n/100000000).toFixed(2)+' 億';
-  if(n>=10000) return 'NT$ '+(n/10000).toFixed(1)+' 萬';
-  return 'NT$ '+n.toLocaleString();
+function fmtMoney(n) {
+  if (!n || isNaN(n)) return '';
+  const num = Number(n);
+  if (num >= 100000000) return 'NT$ ' + (num / 100000000).toFixed(2) + ' 億';
+  if (num >= 10000) return 'NT$ ' + (num / 10000).toFixed(1) + ' 萬';
+  return 'NT$ ' + num.toLocaleString();
+}
+function fmtTotalAmount(n) {
+  if (!n || n === 0) return '0';
+  if (n >= 100000000) return (n / 100000000).toFixed(1) + '<span class="unit">億</span>';
+  if (n >= 10000) return Math.round(n / 10000).toLocaleString() + '<span class="unit">萬</span>';
+  return n.toLocaleString();
+}
+function getAmount(rec) {
+  const brief = rec.brief || {};
+  const companies = brief.companies || {};
+  if (companies && companies.amount) return Number(companies.amount);
+  if (brief.amount) return Number(brief.amount);
+  return 0;
 }
 
-async function fetchPage(query,page){
-  const res = await fetch(`${API}?query=${encodeURIComponent(query)}&page=${page}`);
+// ----- Toast -----
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2400);
+}
+
+// ----- Fetch -----
+async function fetchPage(query, page) {
+  const url = `${API}?query=${encodeURIComponent(query)}&page=${page}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('API ' + res.status);
   return await res.json();
 }
 
-async function search(){
-
+async function search() {
   const query = $('query').value.trim();
+  if (!query) { toast('請先填寫主要關鍵字'); return; }
+
   const include = parseList($('include').value);
   const exclude = parseList($('exclude').value);
   const unit = $('unit').value.trim();
-  const type = $('type').value;
-  const category = $('category').value;
   const pages = parseInt($('pages').value);
+  const dateFrom = $('date-from').value;  // YYYY-MM-DD or ''
+  const dateTo = $('date-to').value;
 
-  $('result-body').innerHTML = '<div class="empty">搜尋中...</div>';
+  $('btn-search').disabled = true;
+  $('btn-search').textContent = '搜尋中…';
+  $('topbar-meta').innerHTML = '<span class="spinner" style="vertical-align:-4px;"></span> 抓取資料中';
+  $('result-body').innerHTML = `<div class="state"><span class="spinner"></span><div style="margin-top:14px;font-size:13px;color:var(--text-soft);">正在從 g0v 開放資料庫抓取...</div></div>`;
+
+  saveSettings();
 
   let all = [];
-
-  try{
-
-    const tasks = [];
-
-    for(let i=1;i<=pages;i++){
-      tasks.push(fetchPage(query,i));
+  try {
+    for (let p = 1; p <= pages; p++) {
+      $('topbar-meta').innerHTML = `<span class="spinner" style="vertical-align:-4px;"></span> 第 ${p} / ${pages} 頁`;
+      const data = await fetchPage(query, p);
+      const records = data.records || [];
+      if (records.length === 0) break;
+      all = all.concat(records);
     }
-
-    const results = await Promise.all(tasks);
-
-    results.forEach(v=>{
-      all = all.concat(v.records || []);
-    });
-
-  }catch(e){
-
-    $('result-body').innerHTML = '<div class="empty">API 抓取失敗</div>';
+  } catch (e) {
+    $('result-body').innerHTML = `<div class="state"><div class="state-icon">!</div><div class="state-title">抓取失敗</div><div class="state-desc">${e.message}<br><br>可能原因:網路斷線、API 暫時忙線、或被防火牆擋住。請稍等幾分鐘再試。</div></div>`;
+    $('btn-search').disabled = false;
+    $('btn-search').textContent = '開始搜尋';
+    $('topbar-meta').textContent = 'Error';
     return;
   }
 
-  const rows = all.filter(rec=>{
+  // Filter
+  // 把 YYYY-MM-DD 轉成 YYYYMMDD 給比對用
+  const fromRaw = dateFrom ? dateFrom.replace(/-/g, '') : '';
+  const toRaw = dateTo ? dateTo.replace(/-/g, '') : '';
 
+  const filtered = all.filter(rec => {
     const brief = rec.brief || {};
-    const title = brief.title || '';
-    const typeRaw = brief.type || '';
-    const unitName = rec.unit_name || '';
+    const title = brief.title || rec.title || '';
+    const unitName = rec.unit_name || brief.unit_name || '';
+    const recType = brief.type || '';
+    const isAward = recType.indexOf('決標') !== -1;
+    const dateRaw = String(rec.date || '');
 
-    const isAward = typeRaw.includes('決標');
-
-    if(type==='tender' && isAward) return false;
-    if(type==='award' && !isAward) return false;
-
-    if(category && !typeRaw.includes(category)) return false;
-
-    for(const w of include){
-      if(!title.includes(w)) return false;
-    }
-
-    for(const w of exclude){
-      if(title.includes(w)) return false;
-    }
-
-    if(unit && !unitName.includes(unit)) return false;
-
+    if (currentType === 'tender' && isAward) return false;
+    if (currentType === 'award' && !isAward) return false;
+    for (const w of include) if (title.indexOf(w) === -1) return false;
+    for (const w of exclude) if (title.indexOf(w) !== -1) return false;
+    if (unit && unitName.indexOf(unit) === -1) return false;
+    if (fromRaw && dateRaw && dateRaw < fromRaw) return false;
+    if (toRaw && dateRaw && dateRaw > toRaw) return false;
     return true;
-
-  }).map(rec=>{
-
-    const brief = rec.brief || {};
-    const typeRaw = brief.type || '';
-    const isAward = typeRaw.includes('決標');
-
-    return {
-      title: brief.title || '(無標題)',
-      type: isAward ? '決標' : '招標',
-      typeRaw,
-      unit: rec.unit_name || '',
-      date: rec.date || '',
-      amount: Number(
-        brief?.companies?.amount ||
-        brief?.amount ||
-        0
-      ),
-      viewerUrl:
-      `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(rec.unit_id || '')}&job_number=${encodeURIComponent(rec.job_number || '')}`,
-      govUrl:
-      'https://web.pcc.gov.tw/prkms/tender/common/basic/searchTenderBasic?searchMode=true&searchType=basic'
-    };
-
   });
 
-  render(rows);
+  currentResults = filtered.map(rec => {
+    const brief = rec.brief || {};
+    const isAward = (brief.type || '').indexOf('決標') !== -1;
+    const amount = getAmount(rec);
+    const jobNo = rec.job_number || '';
+    const unitId = rec.unit_id || '';
 
+    // 從 API 回傳的資料中找出採購網直連 URL
+    // 結構通常是 records[i].brief.url 或 records[i].url
+    // searchbytitle 回傳的是「最新一筆公告」的 brief
+    let pccUrl = '';
+    if (rec.url && rec.url.indexOf('pcc.gov.tw') !== -1) {
+      pccUrl = rec.url;
+    } else if (brief.url && brief.url.indexOf('pcc.gov.tw') !== -1) {
+      pccUrl = brief.url;
+    }
+
+    return {
+      title: brief.title || rec.title || '(無標題)',
+      unit: rec.unit_name || brief.unit_name || '',
+      date: String(rec.date || ''),
+      type: isAward ? 'award' : 'tender',
+      typeLabel: isAward ? '決標' : '招標',
+      amount: amount,
+      // 主連結:採購網直連(若 API 有給),否則退而求其次用 g0v viewer
+      url: pccUrl || `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      // 副連結:g0v 整理頁(資料較完整,看金額、廠商等)
+      altUrl: `https://openfunltd.github.io/pcc-viewer/tender.html?unit_id=${encodeURIComponent(unitId)}&job_number=${encodeURIComponent(jobNo)}`,
+      hasPccUrl: !!pccUrl,
+    };
+  });
+
+  renderResults();
+  $('btn-search').disabled = false;
+  $('btn-search').textContent = '開始搜尋';
+  $('btn-export').disabled = currentResults.length === 0;
+  $('topbar-meta').textContent = `抓取 ${all.length} 筆 / 篩出 ${currentResults.length} 筆`;
 }
 
-function render(rows){
+// ----- Render -----
+function renderResults() {
+  const sort = $('sort').value;
+  const sorted = [...currentResults].sort((a, b) => {
+    if (sort === 'date-desc') return (b.date || '').localeCompare(a.date || '');
+    if (sort === 'date-asc') return (a.date || '').localeCompare(b.date || '');
+    if (sort === 'amount-desc') return b.amount - a.amount;
+    if (sort === 'amount-asc') return a.amount - b.amount;
+    return 0;
+  });
 
-  $('s-total').textContent = rows.length;
+  const total = sorted.length;
+  const tenderCount = sorted.filter(r => r.type === 'tender').length;
+  const awardCount = sorted.filter(r => r.type === 'award').length;
+  const totalAmount = sorted.reduce((s, r) => s + r.amount, 0);
 
-  $('s-tender').textContent =
-    rows.filter(v=>v.type==='招標').length;
+  $('s-total').textContent = total.toLocaleString();
+  $('s-tender').textContent = tenderCount.toLocaleString();
+  $('s-award').textContent = awardCount.toLocaleString();
+  $('s-amount').innerHTML = fmtTotalAmount(totalAmount);
 
-  $('s-award').textContent =
-    rows.filter(v=>v.type==='決標').length;
+  $('result-head-title').textContent = `結果列表 · ${total} 筆`;
 
-  $('s-amount').textContent =
-    rows.reduce((s,v)=>s+v.amount,0).toLocaleString();
-
-  if(rows.length===0){
-    $('result-body').innerHTML =
-      '<div class="empty">找不到資料</div>';
+  const body = $('result-body');
+  if (sorted.length === 0) {
+    body.innerHTML = `<div class="state"><div class="state-icon">∅</div><div class="state-title">沒有符合的標案</div><div class="state-desc">試試這幾個方向:<br>1. 把「必須包含」減少一個關鍵字<br>2. 「機關名稱」清空試試<br>3. 主要關鍵字改寬一點(例如只輸入「資訊」)<br>4. 把「抓取頁數」調大</div></div>`;
     return;
   }
 
-  $('result-body').innerHTML = rows.map(r=>`
-
-    <div class="card">
-
-      <div>
-        ${r.type} ｜ ${fmtDate(r.date)}
+  body.innerHTML = sorted.map(r => `
+    <div class="tender-card">
+      <div class="tender-card-main" onclick="window.open('${r.url}','_blank')">
+        <div class="tender-card-top">
+          <span class="tag tag-${r.type}">${r.typeLabel}</span>
+          <span class="tender-date">${fmtDate(r.date)}</span>
+          ${r.amount > 0 ? `<span class="tender-amount">${fmtMoney(r.amount)}</span>` : ''}
+        </div>
+        <div class="tender-title">${escapeHtml(r.title)}</div>
+        <div class="tender-unit">${escapeHtml(r.unit) || '(機關未填)'}</div>
       </div>
-
-      <div class="title">
-        ${r.title}
+      <div class="tender-card-links">
+        ${r.hasPccUrl 
+          ? `<a href="${r.url}" target="_blank" rel="noopener">採購網原始公告 →</a>
+             <span class="link-sep">·</span>
+             <a href="${r.altUrl}" target="_blank" rel="noopener" class="link-soft">查看資料整理</a>`
+          : `<a href="${r.altUrl}" target="_blank" rel="noopener">查看標案詳情 →</a>
+             <span class="link-soft" style="color:var(--text-faint);">(此筆無採購網直連)</span>`
+        }
       </div>
-
-      <div>
-        ${r.unit}
-      </div>
-
-      <div style="margin-top:10px;color:#777;">
-        ${r.typeRaw}
-      </div>
-
-      <div style="margin-top:10px;">
-        ${r.amount ? money(r.amount) : ''}
-      </div>
-
-      <div class="links">
-
-        <a class="link"
-           href="${r.viewerUrl}"
-           target="_blank">
-           查看完整標案資料
-        </a>
-
-        <a class="link"
-           href="${r.govUrl}"
-           target="_blank"
-           onclick="copyTender('${encodeURIComponent(r.title)}')">
-           前往政府採購網搜尋
-        </a>
-
-      </div>
-
     </div>
-
   `).join('');
-
 }
 
-function copyTender(title){
-
-  const decoded = decodeURIComponent(title);
-
-  navigator.clipboard.writeText(decoded);
-
-  setTimeout(()=>{
-    alert('已複製標案名稱，請貼到政府採購網搜尋');
-  },100);
-
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[c]));
 }
 
-$('searchBtn').addEventListener('click',search);
-
-window.addEventListener('keydown',e=>{
-  if(e.key==='Enter'){
-    search();
+// ----- Export CSV -----
+function exportCSV() {
+  if (currentResults.length === 0) return;
+  const headers = ['類型', '公告日期', '標案名稱', '機關', '金額', '連結'];
+  const lines = [headers.join(',')];
+  for (const r of currentResults) {
+    const row = [
+      r.typeLabel,
+      fmtDate(r.date),
+      r.title,
+      r.unit,
+      r.amount ? r.amount : '',
+      r.url,
+    ].map(v => {
+      const s = String(v == null ? '' : v);
+      return (s.includes(',') || s.includes('"') || s.includes('\n'))
+        ? '"' + s.replace(/"/g, '""') + '"' : s;
+    });
+    lines.push(row.join(','));
   }
+  const csv = '\ufeff' + lines.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `標案_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('已下載 CSV 檔');
+}
+
+// ----- Reset -----
+function reset() {
+  $('query').value = '資訊';
+  $('include').value = '';
+  $('exclude').value = '維護, 保養';
+  $('unit').value = '';
+  $('pages').value = '3';
+  $('date-from').value = '';
+  $('date-to').value = '';
+  document.querySelectorAll('.date-quick button').forEach(b => b.classList.remove('active'));
+  currentType = 'all';
+  document.querySelectorAll('#type-group label').forEach(l => {
+    l.classList.toggle('checked', l.dataset.val === 'all');
+  });
+  saveSettings();
+  toast('條件已重置');
+}
+
+// ----- Date quick buttons -----
+function setDateRange(days) {
+  if (days === 0) {
+    $('date-from').value = '';
+    $('date-to').value = '';
+  } else {
+    const today = new Date();
+    const from = new Date(today.getTime() - days * 86400000);
+    const fmt = d => d.getFullYear() + '-' +
+      String(d.getMonth() + 1).padStart(2, '0') + '-' +
+      String(d.getDate()).padStart(2, '0');
+    $('date-from').value = fmt(from);
+    $('date-to').value = fmt(today);
+  }
+  document.querySelectorAll('.date-quick button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.days) === days);
+  });
+}
+document.querySelectorAll('.date-quick button').forEach(btn => {
+  btn.addEventListener('click', () => setDateRange(parseInt(btn.dataset.days)));
 });
+// 日期框手動改也要清掉快速鈕高亮
+['date-from', 'date-to'].forEach(id => {
+  $(id).addEventListener('change', () => {
+    document.querySelectorAll('.date-quick button').forEach(b => b.classList.remove('active'));
+  });
+});
+
+// ----- Wire up -----
+$('btn-search').addEventListener('click', search);
+$('btn-export').addEventListener('click', exportCSV);
+$('btn-reset').addEventListener('click', reset);
+$('sort').addEventListener('change', renderResults);
+document.querySelectorAll('.sb-input').forEach(el => {
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') search(); });
+});
+
+loadSettings();
 </script>
 
 </body>
